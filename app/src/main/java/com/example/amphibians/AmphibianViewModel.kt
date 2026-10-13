@@ -4,7 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.launch
 
 sealed interface AmphibianUiState {
@@ -13,9 +16,9 @@ sealed interface AmphibianUiState {
     data object Loading : AmphibianUiState
 }
 
-class AmphibianViewModel : ViewModel() {
-
-    private val repositorio = AmphibianRepository()
+class AmphibianViewModel(
+    private val repositorio: AmphibianRepository
+) : ViewModel() {
 
     var uiState: AmphibianUiState by mutableStateOf(AmphibianUiState.Loading)
         private set
@@ -31,6 +34,16 @@ class AmphibianViewModel : ViewModel() {
                 AmphibianUiState.Success(repositorio.getAmphibians())
             } catch (e: Exception) {
                 AmphibianUiState.Error
+            }
+        }
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val aplicacion =
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as AmphibiansApplication
+                AmphibianViewModel(aplicacion.container.amphibianRepository)
             }
         }
     }
